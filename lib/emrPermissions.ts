@@ -135,3 +135,32 @@ export function canSeeNote(
   if (!payload || !canReadNotes(payload.role)) return false;
   return note.status === 'final' || isNoteAuthor(payload, note);
 }
+
+// ---------------------------------------------------------------------------
+// Biopsy & Pathology Tracking
+// ---------------------------------------------------------------------------
+
+/** Admin, doctor and receptionist can see pathology samples and tracking status. */
+export function canReadPathology(role?: Role | string): boolean {
+  return role === 'admin' || role === 'doctor' || role === 'receptionist';
+}
+
+/** Admin, doctor and receptionist can log a dispatched sample. */
+export function canRecordPathology(role?: Role | string): boolean {
+  return canReadPathology(role);
+}
+
+/** Receptionist, doctor and admin can mark a sample as received from the lab. */
+export function canReceivePathology(role?: Role | string): boolean {
+  return canReadPathology(role);
+}
+
+/** Only doctor and admin can review pathology results, enter result summaries, and sign off. */
+export function canReviewPathology(role?: Role | string): boolean {
+  return role === 'admin' || role === 'doctor';
+}
+
+/** Only doctor and admin can delete a pathology sample entry (soft delete in audit log). */
+export function canDeletePathology(role?: Role | string): boolean {
+  return role === 'admin' || role === 'doctor';
+}

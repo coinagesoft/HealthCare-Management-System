@@ -2,10 +2,18 @@ import { Appointment } from '@/lib/storage';
 import { DoctorOverride } from '@/lib/availability';
 
 import { Medicine } from '@/lib/medicines';
+import type { PathologySample, PathologyStats } from '@/lib/pathology';
 
-export type AdminTabType = 'overview' | 'appointments' | 'patients' | 'payments' | 'availability' | 'medicines';
+export type AdminTabType =
+  | 'overview'
+  | 'appointments'
+  | 'patients'
+  | 'payments'
+  | 'availability'
+  | 'medicines'
+  | 'pathology';
 
-export type { Medicine };
+export type { Medicine, PathologySample, PathologyStats };
 
 export type AdminRole = 'admin' | 'doctor' | 'receptionist' | 'pharmacist';
 

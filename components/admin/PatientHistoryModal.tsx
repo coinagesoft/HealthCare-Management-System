@@ -8,6 +8,7 @@ import DoctorBadge from './DoctorBadge';
 import VitalsPanel from './VitalsPanel';
 import HistoryPanel from './HistoryPanel';
 import VisitNotePanel from './VisitNotePanel';
+import PathologyPanel from './PathologyPanel';
 import {
   IconCross,
   IconPhone,
@@ -70,7 +71,7 @@ export default function PatientHistoryModal({
   const [selectedId, setSelectedId] = useState<string | null>(sorted[0]?.id ?? null);
   // Doctor and admin can read visit notes; receptionist has no access to them.
   const canSeeNotes = userRole === 'admin' || userRole === 'doctor';
-  const [view, setView] = useState<'visits' | 'vitals' | 'history' | 'notes'>('visits');
+  const [view, setView] = useState<'visits' | 'vitals' | 'history' | 'notes' | 'pathology'>('visits');
   const [draft, setDraft] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
@@ -216,6 +217,7 @@ export default function PatientHistoryModal({
             ['vitals', 'Vitals & trends'],
             ['history', 'Medical history'],
             ...(canSeeNotes ? ([['notes', 'Visit notes']] as const) : []),
+            ['pathology', 'Pathology & Biopsy'],
           ] as const).map(([key, label]) => (
             <button
               key={key}
@@ -269,6 +271,16 @@ export default function PatientHistoryModal({
                 userRole={userRole}
                 email={patient.email}
                 phone={patient.phone}
+              />
+            </div>
+          ) : view === 'pathology' ? (
+            <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', padding: '20px 24px' }}>
+              <PathologyPanel
+                adminFetch={adminFetch}
+                userRole={userRole}
+                email={patient.email}
+                phone={patient.phone}
+                patientName={patient.fullName}
               />
             </div>
           ) : sorted.length === 0 ? (

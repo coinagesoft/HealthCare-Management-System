@@ -9,6 +9,7 @@ import {
   IconPayments,
   IconAvailability,
   IconMedicineBottle,
+  IconMicroscope,
   IconLogOut,
 } from './AdminIcons';
 import { AdminTabType, AdminUser } from './types';
@@ -22,6 +23,7 @@ interface AdminHeaderProps {
   totalPatients: number;
   totalOverrides: number;
   totalMedicines?: number;
+  overduePathology?: number;
   onQuickBook: () => void;
   onLogout: () => void;
   adminFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
@@ -35,6 +37,7 @@ export default function AdminHeader({
   totalPatients,
   totalOverrides,
   totalMedicines = 0,
+  overduePathology = 0,
   onLogout,
   adminFetch,
 }: AdminHeaderProps) {
@@ -217,6 +220,21 @@ export default function AdminHeader({
               <span>Medicines &amp; Inventory</span>
               {totalMedicines > 0 && (
                 <span className="tab-counter counter-emerald">{totalMedicines}</span>
+              )}
+            </button>
+          )}
+
+          {/* Doctor & Receptionist: Pathology & Biopsies */}
+          {(isDoctor || isReceptionist) && (
+            <button
+              type="button"
+              className={`admin-tab-btn ${activeTab === 'pathology' ? 'active' : ''}`}
+              onClick={() => setActiveTab('pathology')}
+            >
+              <IconMicroscope />
+              <span>Pathology &amp; Biopsy</span>
+              {overduePathology > 0 && (
+                <span className="tab-counter counter-amber">{overduePathology}</span>
               )}
             </button>
           )}

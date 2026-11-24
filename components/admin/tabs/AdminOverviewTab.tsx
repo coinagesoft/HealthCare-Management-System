@@ -7,14 +7,18 @@ import {
   IconCalendar,
   IconUsers,
   IconClock,
+  IconMicroscope,
+  IconArrowRight,
 } from '@/components/admin/AdminIcons';
-import { AdminStats, RevenueData } from '@/components/admin/types';
+import { AdminStats, RevenueData, PathologyStats } from '@/components/admin/types';
 
 interface AdminOverviewTabProps {
   stats: AdminStats;
   patientCount: number;
   revenueData: RevenueData | null;
   overridesCount: number;
+  pathologyStats?: PathologyStats | null;
+  onGoToPathology?: () => void;
 }
 
 export default function AdminOverviewTab({
@@ -22,6 +26,8 @@ export default function AdminOverviewTab({
   patientCount,
   revenueData,
   overridesCount,
+  pathologyStats,
+  onGoToPathology,
 }: AdminOverviewTabProps) {
   return (
     <div className="tab-pane-fade">
@@ -75,6 +81,93 @@ export default function AdminOverviewTab({
           </div>
         </div>
       </div>
+
+      {/* Pathology & Biopsy Turnaround Summary Card */}
+      {pathologyStats && (pathologyStats.overdue > 0 || pathologyStats.received > 0 || pathologyStats.sent > 0) && (
+        <div
+          style={{
+            margin: '16px 0 24px',
+            padding: '16px 20px',
+            borderRadius: 12,
+            border: pathologyStats.overdue > 0 ? '1.5px solid #FCA5A5' : '1px solid #E2E8F0',
+            background: pathologyStats.overdue > 0 ? '#FEF2F2' : '#F8FAFC',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 14,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 10,
+                background: pathologyStats.overdue > 0 ? '#FEE2E2' : '#EEF2FF',
+                color: pathologyStats.overdue > 0 ? '#DC2626' : '#4F46E5',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <IconMicroscope size={22} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <strong style={{ fontSize: 15, color: '#0F172A' }}>
+                  Pathology &amp; Biopsy Turnaround
+                </strong>
+                {pathologyStats.overdue > 0 && (
+                  <span
+                    style={{
+                      background: '#DC2626',
+                      color: '#fff',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: 10,
+                    }}
+                  >
+                    {pathologyStats.overdue} OVERDUE
+                  </span>
+                )}
+              </div>
+              <p style={{ margin: '3px 0 0', fontSize: 13, color: '#475569' }}>
+                {pathologyStats.overdue > 0
+                  ? `${pathologyStats.overdue} report${pathologyStats.overdue > 1 ? 's are' : ' is'} past expected date. `
+                  : 'All lab dispatches on schedule. '}
+                <span>
+                  {pathologyStats.received} received awaiting review &bull; {pathologyStats.sent} in transit to partner labs.
+                </span>
+              </p>
+            </div>
+          </div>
+
+          {onGoToPathology && (
+            <button
+              type="button"
+              onClick={onGoToPathology}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '8px 14px',
+                borderRadius: 8,
+                background: pathologyStats.overdue > 0 ? '#DC2626' : '#4F46E5',
+                color: '#fff',
+                fontSize: 13,
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <span>View Pathology Tab</span>
+              <IconArrowRight />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Interactive SVG Revenue Trends Chart */}
       {revenueData && (

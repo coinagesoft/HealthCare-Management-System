@@ -10,6 +10,7 @@ import {
   PatientGroup,
   RevenueData,
   FollowUpRecord,
+  PathologyStats,
 } from '@/components/admin/types';
 
 // Admin Modular Components & Tabs
@@ -25,6 +26,7 @@ import AdminBookAppointmentModal from '@/components/admin/AdminBookAppointmentMo
 import AdminRescheduleModal from '@/components/admin/AdminRescheduleModal';
 import PrescriptionModal from '@/components/admin/PrescriptionModal';
 import AdminMedicinesTab from '@/components/admin/tabs/AdminMedicinesTab';
+import AdminPathologyTab from '@/components/admin/tabs/AdminPathologyTab';
 import { Medicine } from '@/lib/medicines';
 import { toast } from '@/components/ui/Toast';
 
@@ -106,6 +108,9 @@ export default function AdminPage() {
   // Medicines Database State
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [isLoadingMedicines, setIsLoadingMedicines] = useState(false);
+
+  // Pathology Overview Stats
+  const [pathologyStats, setPathologyStats] = useState<PathologyStats | null>(null);
 
   // Selected Patient for History Modal
   const [selectedPatient, setSelectedPatient] = useState<PatientGroup | null>(null);
@@ -342,6 +347,16 @@ export default function AdminPage() {
       .finally(() => setIsLoadingMedicines(false));
   }, [adminFetch]);
 
+  // Fetch Pathology Stats
+  const loadPathologyStats = useCallback(() => {
+    adminFetch(`/api/admin/pathology?stats=true&_t=${Date.now()}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.stats) setPathologyStats(data.stats);
+      })
+      .catch((err) => console.error('Failed to load pathology stats:', err));
+  }, [adminFetch]);
+
   // Role-Based Access Control State
   const role = adminUser?.role || 'doctor';
   const isReceptionist = role === 'receptionist';
@@ -350,7 +365,7 @@ export default function AdminPage() {
 
   // Auto-redirect if user lands on an unauthorized tab
   useEffect(() => {
-    if (isReceptionist && !['appointments', 'patients', 'payments'].includes(activeTab)) {
+    if (isReceptionist && !['appointments', 'patients', 'payments', 'pathology'].includes(activeTab)) {
       setActiveTab('appointments');
     } else if (isPharmacist && activeTab !== 'medicines') {
       setActiveTab('medicines');
@@ -366,15 +381,17 @@ export default function AdminPage() {
         loadOverrides();
         loadMedicines();
         loadFollowUps();
+        loadPathologyStats();
       } else if (isReceptionist) {
         loadAppointments();
         loadOverrides();
         loadFollowUps();
+        loadPathologyStats();
       } else if (isPharmacist) {
         loadMedicines();
       }
     }
-  }, [isAuthenticated, isDoctor, isReceptionist, isPharmacist, loadAppointments, loadRevenue, loadOverrides, loadMedicines, loadFollowUps]);
+  }, [isAuthenticated, isDoctor, isReceptionist, isPharmacist, loadAppointments, loadRevenue, loadOverrides, loadMedicines, loadFollowUps, loadPathologyStats]);
 
   // Update Appointment Status (Instant Optimistic UI + Server Sync)
   const handleUpdateStatus = async (
@@ -668,6 +685,7 @@ export default function AdminPage() {
         totalPatients={patientDirectory.length}
         totalOverrides={overrides.length}
         totalMedicines={medicines.length}
+        overduePathology={pathologyStats?.overdue || 0}
         onQuickBook={() => {
           setBookingDate('');
           setShowBookModal(true);
@@ -684,6 +702,8 @@ export default function AdminPage() {
             patientCount={patientDirectory.length}
             revenueData={revenueData}
             overridesCount={overrides.length}
+            pathologyStats={pathologyStats}
+            onGoToPathology={() => setActiveTab('pathology')}
           />
         )}
 
@@ -757,6 +777,16 @@ export default function AdminPage() {
             isLoading={isLoadingMedicines}
             onRefresh={loadMedicines}
             adminFetch={adminFetch}
+          />
+        )}
+
+        {activeTab === 'pathology' && (isDoctor || isReceptionist) && (
+          <AdminPathologyTab
+            userRole={role}
+            adminFetch={adminFetch}
+            patients={patientDirectory}
+            onSelectPatient={(patient) => setSelectedPatient(patient)}
+            onRefreshStats={loadPathologyStats}
           />
         )}
       </main>
