@@ -17,7 +17,6 @@ import {
 } from '@/lib/prescriptionTemplate';
 import { Medicine } from '@/lib/medicines';
 import { useClinicSettings } from '@/lib/useClinicSettings';
-import VitalsPanel from './VitalsPanel';
 import AllergyBanner from './AllergyBanner';
 import { IconCross, IconPlus, IconTrash, IconMail, IconRefresh, IconFileText, IconPill, IconEdit, IconCopy, IconCheck } from './AdminIcons';
 
@@ -1023,10 +1022,6 @@ export default function PrescriptionModal({
             )}
 
             {appointment && <AllergyBanner adminFetch={adminFetch} appointmentId={appointment.id} />}
-
-            {appointment && (
-              <VitalsPanel variant="strip" adminFetch={adminFetch} appointmentId={appointment.id} />
-            )}
 
             <div className="rx-row-2">
               <label className="rx-field">

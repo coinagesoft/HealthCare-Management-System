@@ -88,3 +88,50 @@ export function canEditHistory(
 export function canDeleteHistory(role?: Role | string): boolean {
   return role === 'admin' || role === 'doctor';
 }
+
+// ---------------------------------------------------------------------------
+// Visit notes (structured clinical notes)
+// ---------------------------------------------------------------------------
+
+/**
+ * Doctor and admin can read FINAL notes. Receptionist and pharmacist have no access
+ * (same rule as the clinical notes today). A DRAFT is visible only to the doctor who wrote it.
+ */
+export function canReadNotes(role?: Role | string): boolean {
+  return role === 'admin' || role === 'doctor';
+}
+
+/** Only a doctor writes notes. Admin is read-only. */
+export function canWriteNotes(role?: Role | string): boolean {
+  return role === 'doctor';
+}
+
+function isNoteAuthor(payload: AdminTokenPayload | undefined, note: { authorEmail?: string | null }): boolean {
+  if (!payload || payload.role !== 'doctor') return false;
+  return (note.authorEmail || '').toLowerCase() === (payload.email || '').toLowerCase();
+}
+
+/** Only the author edits a draft or amends a final note. Other doctors can read final notes only. */
+export function canEditNote(
+  payload: AdminTokenPayload | undefined,
+  note: { authorEmail?: string | null }
+): boolean {
+  return isNoteAuthor(payload, note);
+}
+
+/** Only the author can remove a DRAFT. A final note is never deleted. */
+export function canDeleteNote(
+  payload: AdminTokenPayload | undefined,
+  note: { authorEmail?: string | null; status: string }
+): boolean {
+  return note.status === 'draft' && isNoteAuthor(payload, note);
+}
+
+/** Can this person see this note at all? Final notes: any doctor/admin. Drafts: the author only. */
+export function canSeeNote(
+  payload: AdminTokenPayload | undefined,
+  note: { authorEmail?: string | null; status: string }
+): boolean {
+  if (!payload || !canReadNotes(payload.role)) return false;
+  return note.status === 'final' || isNoteAuthor(payload, note);
+}
