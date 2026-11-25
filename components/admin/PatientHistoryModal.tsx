@@ -392,27 +392,83 @@ export default function PatientHistoryModal({
                               Reschedule
                             </button>
                           )}
-                        </div>
-                      </div>
-
-                      <div className="selected-appt-details-row">
-                        <div className="selected-appt-patient-query">
-                          <span className="query-label">Health concern</span>
-                          <span className="query-text">{selected.reason || '—'}</span>
-                          {selected.message && <span className="query-text">{selected.message}</span>}
-                          <span className="query-label" style={{ display: 'block', marginTop: 10 }}>Doctor</span>
-                          <DoctorBadge slug={selected.doctorSlug} name={selected.doctorName} />
-                        </div>
-                        <div className="selected-appt-concern">
-                          <span className="detail-tag-label">Status</span>
                           <select
                             value={selected.status === 'no-show' ? 'cancelled' : selected.status ?? 'confirmed'}
                             onChange={(e) => handleStatus(e.target.value as EditableStatus)}
+                            className={`status-dropdown status-${selected.status === 'no-show' ? 'cancelled' : selected.status ?? 'confirmed'}`}
+                            style={{
+                              padding: '5px 12px',
+                              borderRadius: '20px',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              outline: 'none',
+                              borderWidth: '1.5px',
+                              borderStyle: 'solid',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                              letterSpacing: '0.2px',
+                            }}
+                            title="Change consultation status"
                           >
-                            <option value="confirmed">Confirmed</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="confirmed">✓ Confirmed</option>
+                            <option value="completed">✓ Completed</option>
+                            <option value="cancelled">✕ Cancelled</option>
                           </select>
+                        </div>
+                      </div>
+
+                      <div className="selected-appt-details-row" style={{ borderTop: 'none', paddingTop: 0 }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: 12,
+                            background: '#FFFFFF',
+                            borderRadius: 10,
+                            padding: '10px 14px',
+                            border: '1px solid #E2E8F0',
+                            borderLeft: '4px solid var(--primary, #565ACF)',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: '#64748B',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.4px',
+                              }}
+                            >
+                              Health concern:
+                            </span>
+                            <span style={{ fontSize: 13, color: '#1E293B', fontWeight: 600 }}>
+                              {selected.reason || 'General Consultation'}
+                            </span>
+                            {selected.message && (
+                              <span style={{ fontSize: 12, color: '#64748B', fontStyle: 'italic' }}>
+                                &bull; &ldquo;{selected.message}&rdquo;
+                              </span>
+                            )}
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: '#64748B',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.4px',
+                              }}
+                            >
+                              Doctor:
+                            </span>
+                            <DoctorBadge slug={selected.doctorSlug} name={selected.doctorName} />
+                          </div>
                         </div>
                       </div>
                     </div>
