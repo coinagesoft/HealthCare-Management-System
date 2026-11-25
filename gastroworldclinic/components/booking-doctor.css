@@ -1,0 +1,38 @@
+/* ==========================================================================
+   Doctor dropdown - optional field at the top of the "Your details" panel.
+   Base look (height, border, focus ring, error, disabled) comes from
+   `.bk-field select` in booking.css, so it matches the "Reason" dropdown.
+   ========================================================================== */
+
+/* Spacing: the field sits first in the details grid */
+.bk-field #doctorSlug {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+/* "No preference" placeholder option looks lighter than a real doctor name */
+.bk-field #doctorSlug:has(option[value=""]:checked) {
+  font-weight: 500;
+  color: #8b8fae;
+}
+
+.bk-field #doctorSlug:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+/* Selected doctor's role / helper text under the dropdown */
+.bk-field .bk-doc-role {
+  margin: 6px 2px 0;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+/* Phones: let the long "No preference..." text fit on one line */
+@media (max-width: 480px) {
+  .bk-field #doctorSlug {
+    font-size: 13.5px;
+    padding: 0 10px;
+  }
+}

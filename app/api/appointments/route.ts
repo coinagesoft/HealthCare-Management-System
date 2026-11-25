@@ -124,6 +124,8 @@ export async function POST(request: NextRequest) {
       time,
       message,
       paymentId,
+      paymentOrderId,
+      paymentSignature,
       paymentMethod,
       location: requestedLocation,
       doctorSlug: requestedDoctorSlug,
@@ -231,6 +233,41 @@ export async function POST(request: NextRequest) {
     if (!paymentId || typeof paymentId !== 'string' || !paymentId.trim()) {
       return NextResponse.json(
         { error: 'Payment of ₹500 is required to confirm your appointment.' },
+        { status: 400 }
+      );
+    }
+
+    // 1.3 Security fix: verify Razorpay signature server-side before accepting the booking.
+    // The client must send razorpay_payment_id, razorpay_order_id and razorpay_signature.
+    // Without a valid RAZORPAY_KEY_SECRET we reject the booking entirely.
+    const rzpSecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!rzpSecret) {
+      console.error('[appointments] RAZORPAY_KEY_SECRET is not set — cannot verify payment signature');
+      return NextResponse.json(
+        { error: 'Payment verification is not configured on this server. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
+    if (
+      !paymentOrderId || typeof paymentOrderId !== 'string' ||
+      !paymentSignature || typeof paymentSignature !== 'string'
+    ) {
+      return NextResponse.json(
+        { error: 'Payment verification failed: missing order ID or signature. Please retry the payment.' },
+        { status: 400 }
+      );
+    }
+
+    // HMAC-SHA256(orderId + "|" + paymentId, keySecret) must equal the signature
+    const expectedSig = crypto
+      .createHmac('sha256', rzpSecret)
+      .update(`${paymentOrderId.trim()}|${paymentId.trim()}`)
+      .digest('hex');
+    if (expectedSig !== paymentSignature.trim()) {
+      console.warn('[appointments] Razorpay signature mismatch — possible tampered payment', { paymentId, paymentOrderId });
+      return NextResponse.json(
+        { error: 'Payment verification failed: invalid signature. This payment cannot be accepted.' },
         { status: 400 }
       );
     }

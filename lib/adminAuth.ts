@@ -36,10 +36,21 @@ function envAdminUser(email: string, password: string): AdminUserConfig | null {
   };
 }
 
-const JWT_SECRET =
-  process.env.ADMIN_JWT_SECRET ||
-  process.env.GOOGLE_CLIENT_SECRET ||
-  'dr-aarav-clinic-jwt-secret-key-2026-telehealth';
+// 1.1 Security fix: JWT secret must be explicitly set — no hardcoded fallback.
+// Generate one with: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+// then add ADMIN_JWT_SECRET=<value> to your .env.local
+// 1.1 Security fix: JWT secret must be explicitly set — no hardcoded fallback.
+// Generate one with: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+// then add ADMIN_JWT_SECRET=<value> to your .env.local
+const _JWT_SECRET_RAW = process.env.ADMIN_JWT_SECRET;
+if (!_JWT_SECRET_RAW) {
+  throw new Error(
+    '[adminAuth] ADMIN_JWT_SECRET environment variable is not set. ' +
+    'Generate a secret with: node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'hex\'))" ' +
+    'and add ADMIN_JWT_SECRET=<value> to .env.local'
+  );
+}
+const JWT_SECRET: string = _JWT_SECRET_RAW;
 
 export const ACCESS_TOKEN_COOKIE = 'admin_access_token';
 export const REFRESH_TOKEN_COOKIE = 'admin_refresh_token';

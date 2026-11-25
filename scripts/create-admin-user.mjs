@@ -80,12 +80,22 @@ const args = parseArgs(process.argv.slice(2));
 const email = String(args.email || '').trim().toLowerCase();
 if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) fail('Pass a valid --email.');
 
+// 1.5 Security fix: DB credentials must be explicit — no root/empty-password defaults.
+const dbHost = process.env.DB_HOST;
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+const dbName = process.env.DB_NAME;
+
+if (!dbHost || !dbUser || dbPassword === undefined || !dbName) {
+  fail('Missing DB environment variables. Run with --env-file=.env.local and set DB_HOST, DB_USER, DB_PASSWORD, DB_NAME.');
+}
+
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || '127.0.0.1',
+  host: dbHost,
   port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'happy_morning',
+  user: dbUser,
+  password: dbPassword,
+  database: dbName,
   charset: 'utf8mb4',
 });
 

@@ -1,13 +1,28 @@
 import mysql from 'mysql2/promise';
 
+// 1.5 Security fix: DB credentials must be explicitly set — no root/empty-password fallback.
+// All four variables are required. Set them in .env.local.
+const _DB_HOST = process.env.DB_HOST;
+const _DB_USER = process.env.DB_USER;
+const _DB_PASSWORD = process.env.DB_PASSWORD;
+const _DB_NAME_ENV = process.env.DB_NAME;
+
+if (!_DB_HOST || !_DB_USER || _DB_PASSWORD === undefined || !_DB_NAME_ENV) {
+  throw new Error(
+    '[db] Missing required database environment variables. ' +
+    'Set DB_HOST, DB_USER, DB_PASSWORD and DB_NAME in .env.local. ' +
+    'Never use root with an empty password.'
+  );
+}
+
 // Local MySQL by default. Override any value in .env.local (see .env.local.example).
-const DB_NAME = process.env.DB_NAME || 'happy_morning';
+const DB_NAME = _DB_NAME_ENV;
 
 const DB_CONFIG = {
-  host: process.env.DB_HOST || '127.0.0.1',
+  host: _DB_HOST,
   port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
+  user: _DB_USER,
+  password: _DB_PASSWORD,
   database: DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,

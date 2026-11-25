@@ -1,11 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getOAuth2Client, DOCTOR_EMAIL } from '@/lib/google';
 import { getGoogleTokens, getGoogleConfig } from '@/lib/storage';
+import { verifyAdminRequest } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // 1.2 Security fix: only authenticated admins may test Google connectivity
+  const auth = verifyAdminRequest(request, ['admin']);
+  if (!auth.authenticated) {
+    return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.statusCode || 401 });
+  }
+
   const config = getGoogleConfig();
   const tokens = getGoogleTokens();
 

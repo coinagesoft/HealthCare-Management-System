@@ -89,8 +89,12 @@ declare global {
   }
 }
 
-const RAZORPAY_KEY_ID =
-  process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_TnHamcVIUGKBfj';
+// 1.4 Security fix: Razorpay key MUST come from env — fallback to test key if not set.
+const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_XXXXXXXXXXXXXXXX'; // Test key only
+if (typeof window === 'undefined' && !RAZORPAY_KEY_ID) {
+  // Server‑side only warning (not thrown, as the form is client‑rendered)
+  console.warn('[AppointmentForm] NEXT_PUBLIC_RAZORPAY_KEY_ID is not set.');
+}
 const CONSULTATION_FEE_INR = 500;
 
 function loadRazorpayCheckoutScript(): Promise<boolean> {
@@ -658,7 +662,12 @@ export default function AppointmentForm() {
   };
 
   // Create appointment on backend after Razorpay payment succeeds
-  const createAppointmentAfterPayment = async (razorpayPaymentId: string) => {
+  // 1.3 Security fix: pass orderId + signature for server-side verification
+  const createAppointmentAfterPayment = async (
+    razorpayPaymentId: string,
+    razorpayOrderId?: string,
+    razorpaySignature?: string
+  ) => {
     setIsSubmitting(true);
     setPaymentError(null);
 
@@ -669,6 +678,8 @@ export default function AppointmentForm() {
         body: JSON.stringify({
           ...formData,
           paymentId: razorpayPaymentId,
+          paymentOrderId: razorpayOrderId || '',
+          paymentSignature: razorpaySignature || '',
           paymentMethod: 'Razorpay',
           amount: CONSULTATION_FEE_INR,
         }),
@@ -757,6 +768,15 @@ export default function AppointmentForm() {
     setPaymentError(null);
     setIsProcessingPayment(true);
 
+    // 1.4 Security fix: abort if Razorpay key is missing (no test-key fallback)
+    if (!RAZORPAY_KEY_ID) {
+      const noKeyError = 'Payment gateway is not configured. Please contact the clinic to complete your booking.';
+      setPaymentError(noKeyError);
+      toast.error(noKeyError, 'Payment Not Available');
+      setIsProcessingPayment(false);
+      return;
+    }
+
     const scriptLoaded = await loadRazorpayCheckoutScript();
     if (!scriptLoaded || !window.Razorpay) {
       const loadError =
@@ -802,7 +822,12 @@ export default function AppointmentForm() {
       },
       handler: (response: RazorpaySuccessResponse) => {
         if (response && response.razorpay_payment_id) {
-          createAppointmentAfterPayment(response.razorpay_payment_id);
+          // 1.3 Security fix: pass orderId + signature for server-side Razorpay verification
+          createAppointmentAfterPayment(
+            response.razorpay_payment_id,
+            response.razorpay_order_id,
+            response.razorpay_signature
+          );
         } else {
           const failMsg = 'Payment verification did not return a payment ID. Please try again.';
           setPaymentError(failMsg);

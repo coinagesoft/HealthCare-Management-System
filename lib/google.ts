@@ -47,7 +47,7 @@ export function getOAuth2Client(customRedirectUri?: string) {
   return oauth2Client;
 }
 
-export function getGoogleAuthUrl(customRedirectUri?: string): string | null {
+export function getGoogleAuthUrl(customRedirectUri?: string, state?: string): string | null {
   const oauth2Client = getOAuth2Client(customRedirectUri);
   if (!oauth2Client) return null;
 
@@ -56,6 +56,7 @@ export function getGoogleAuthUrl(customRedirectUri?: string): string | null {
     prompt: 'consent', // Forces refresh token return
     scope: SCOPES,
     login_hint: DOCTOR_EMAIL,
+    ...(state ? { state } : {}),
   });
 }
 
